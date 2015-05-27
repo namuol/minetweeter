@@ -2,6 +2,7 @@ import Immutable from 'immutable';
 
 import range from './range';
 import shuffle from './shuffle';
+// let shuffle = (v) => { return v; };
 
 import GridHelper from './GridHelper';
 
@@ -18,6 +19,7 @@ export default function createBoard (params) {
     width: width,
     height: height,
   });
+  
 
   let mines = shuffle(range(0, width*height).map((val, index) => {
     if (index < mineCount) {
@@ -28,7 +30,7 @@ export default function createBoard (params) {
 
   // Swap startX, startY with the first safe spot
   mines = mines.set(grid.index(startX, startY), false)
-               .set(mines.indexOf(false), grid.index(startX, startY));
+               .set(mines.indexOf(false), mines.get(grid.index(startX, startY)));
 
   return Immutable.fromJS({
     width: width,

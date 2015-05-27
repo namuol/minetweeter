@@ -10,13 +10,17 @@
 import MinesweeperGame from './MinesweeperGame';
 import toFullWidthString from './toFullWidthString';
 import gameStateToString from './gameStateToString';
+import range from './range';
 
-let game = MinesweeperGame({
-  width: 6,
-  height: 6,
-  mineCount: 5,
-  startX: Math.floor(Math.random()*6),
-  startY: Math.floor(Math.random()*6),
+range(0,10).forEach(() => {
+  let game = MinesweeperGame({
+    width: 10,
+    height: 9,
+    mineCount: 16,
+    startX: Math.floor(Math.random()*9),
+    startY: Math.floor(Math.random()*9),
+  });
+
+  console.log(toFullWidthString(gameStateToString(game.state)) + '\n\n');
 });
 
-console.log(toFullWidthString(gameStateToString(game.state)));
