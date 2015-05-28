@@ -97,8 +97,8 @@ export default function GridHelper (params) {
       
       mask = mask.set(idx, true);
 
-      neighbors4Indices(x, y).filter((idx) => {
-        return processed.get(idx) === false;
+      neighbors8Indices(x, y).filter((idx) => {
+        return !processed.get(idx);
       }).forEach((idx) => {
         queue = queue.push(xy(idx));
       });

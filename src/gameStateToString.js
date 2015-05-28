@@ -33,7 +33,7 @@ export default function gameStateToString (state) {
 
   let hidden = mines.map((isMine, idx) => {
     if (isMine) {
-      return '@';
+      return isMine === 'X' ? 'X' : '@';
     }
 
     let count = neighbors8(mines, ...xy(idx)).count((v) => { return v === true; });
@@ -45,7 +45,7 @@ export default function gameStateToString (state) {
     }
   });
 
-  let pokeMask = pokes.reduce((mask, poke, idx) => {
+  let revealMask = pokes.reduce((mask, poke, idx) => {
     if (!poke) {
       return mask;
     }
@@ -64,25 +64,28 @@ export default function gameStateToString (state) {
 
         return value === '.';
       },
-    })
+    });
   }, pokes);
 
-  pokeMask = pokeMask.map((thisIsPoked, idx) => {
-    if (thisIsPoked) {
-      return true;
+  revealMask = revealMask.reduce((result, thisSpotIsRevealed, idx) => {
+    let reveal = false;
+
+    if (thisSpotIsRevealed) {
+      reveal = true;
     } 
     
-    if (hidden.get(idx) === '.') {
-      return false;
-    }
-    
-    return neighbors8Indices(...xy(idx)).some((idx) => {
-      return pokeMask.get(idx) && hidden.get(idx) === '.';
+    reveal = neighbors8Indices(...xy(idx)).some((idx) => {
+      return revealMask.get(idx) && hidden.get(idx) === '.';
     });
-  });
+
+    return result.set(idx, reveal);
+  }, revealMask);
 
   let revealed = hidden.map((char, idx) => {
-    if (pokeMask.get(idx)) {
+    if (revealMask.get(idx)) {
+      if (pokes.get(idx)) {
+        return 'x';
+      }
       return char;
     } else {
       return '#';

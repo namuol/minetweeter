@@ -28,9 +28,23 @@ export default function createBoard (params) {
     return false;
   }));
 
-  // Swap startX, startY with the first safe spot
-  mines = mines.set(grid.index(startX, startY), false)
-               .set(mines.indexOf(false), mines.get(grid.index(startX, startY)));
+  let indicesToClear = grid.neighbors8Indices(startX, startY).push(grid.index(startX, startY));
+
+  let clearedCount = 0;
+  mines = indicesToClear.reduce((result, idx) => {
+    if (result.get(idx) === true) {
+      // Swap with the first random safe spot
+      clearedCount += 1;
+      result = result.set(idx, false);
+    }
+    return result;
+  }, mines);
+
+  mines = shuffle(range(0,width*height).filter((idx) => {
+    return mines.get(idx) === false && indicesToClear.indexOf(idx) < 0;
+  })).take(clearedCount).reduce((result, idx) => {
+    return result.set(idx, true);
+  }, mines);
 
   return Immutable.fromJS({
     width: width,

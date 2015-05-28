@@ -12,7 +12,7 @@ import toFullWidthString from './toFullWidthString';
 import gameStateToString from './gameStateToString';
 import range from './range';
 
-range(0,10).forEach(() => {
+range(0,1).forEach(() => {
   let game = MinesweeperGame({
     width: 10,
     height: 9,
@@ -21,6 +21,19 @@ range(0,10).forEach(() => {
     startY: Math.floor(Math.random()*9),
   });
 
-  console.log(toFullWidthString(gameStateToString(game.state)) + '\n\n');
+  let view = gameStateToString(game.state);
+
+  let actualMineCount = view.split('').reduce((result, ch) => {
+    if (ch === '@' || ch === 'X') {
+      return result + 1;
+    }
+    return result;
+  }, 0);
+
+  if (actualMineCount !== 16) {
+    throw new Error('Wrong number of mines: ' + actualMineCount);
+  }
+
+  console.log(toFullWidthString(view) + '\n\n');
 });
 
