@@ -9,9 +9,13 @@ export default function MinesweeperGame (params) {
     width,
     height,
     mineCount,
-    startX,
-    startY,
   } = params;
+
+  let emptyBoard = createBoard({
+    width: width,
+    height: height,
+    mineCount: 0,
+  });
 
   let {
     xy,
@@ -21,20 +25,40 @@ export default function MinesweeperGame (params) {
     height: height,
   });
 
-  let board = createBoard({
-    width: width,
-    height: height,
-    mineCount: mineCount,
-    startX: startX,
-    startY: startY,
-  });
+  let board = emptyBoard;
 
   let pokes = range(0, width*height).map(() => {
     return false;
-  }).set(index(startX, startY), true);
+  });
   
   function poke (x, y) {
-    pokes = pokes.set(index(startX, startY), true);
+    if (board == emptyBoard) {
+      board = createBoard({
+        width: width,
+        height: height,
+        mineCount: mineCount,
+        startX: x,
+        startY: y,
+      });
+    }
+
+    let idx = index(x, y);
+    flags = flags.set(idx, false);
+    pokes = pokes.set(idx, true);
+    return getGame();
+  }
+
+  let flags = range(0, width*height).map(() => {
+    return false;
+  });
+  
+  function flag (x, y) {
+    flags = flags.set(index(x, y), true);
+    return getGame();
+  }
+
+  function unflag (x, y) {
+    flags = flags.set(index(x, y), false);
     return getGame();
   }
 
@@ -42,14 +66,25 @@ export default function MinesweeperGame (params) {
     return Immutable.Map({
       board: board,
       pokes: pokes,
+      flags: flags,
+      lost: pokes.some((p, idx) => {
+        return p && board.get('mines').get(idx);
+      }),
+      won: flags.every((f, idx) => {
+        return f == board.get('mines').get(idx);
+      }),
     });
   }
 
   function getGame() {
     return {
+      width: width,
+      height: height,
       poke: poke,
+      flag: flag,
+      unflag: unflag,
       state: getState(),
-    }
+    };
   }
 
   return getGame();

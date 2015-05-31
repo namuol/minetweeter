@@ -1,39 +1,82 @@
-// import Twit from 'twit';
-
-// let twit = new Twit({
-//   consumer_key: process.env.TWIT_CONSUMER_KEY,
-//   consumer_secret: process.env.TWIT_CONSUMER_SECRET,
-//   access_token: process.env.TWIT_ACCESS_TOKEN,
-//   access_token_secret: process.env.TWIT_ACCESS_TOKEN_SECRET,
-// });
+// import twit from './twit';
 
 import MinesweeperGame from './MinesweeperGame';
 import toFullWidthString from './toFullWidthString';
 import gameStateToString from './gameStateToString';
 import range from './range';
+import throttle from './throttle';
+import parseCommands from './parseCommands';
 
-range(0,1).forEach(() => {
-  let game = MinesweeperGame({
-    width: 10,
-    height: 9,
-    mineCount: 16,
-    startX: Math.floor(Math.random()*9),
-    startY: Math.floor(Math.random()*9),
-  });
-
-  let view = gameStateToString(game.state);
-
-  let actualMineCount = view.split('').reduce((result, ch) => {
-    if (ch === '@' || ch === 'X') {
-      return result + 1;
-    }
-    return result;
-  }, 0);
-
-  if (actualMineCount !== 16) {
-    throw new Error('Wrong number of mines: ' + actualMineCount);
-  }
-
-  console.log(toFullWidthString(view) + '\n\n');
+let game = MinesweeperGame({
+  width: 9,
+  height: 9,
+  mineCount: 10,
 });
 
+console.log(toFullWidthString(gameStateToString(game.state)));
+
+// let mentions = twit.stream('statuses/filter', {track: '@minetweeter_'});
+
+let tweetGameBoard = throttle((60*1000)/15, async function (_game) {
+  let status = toFullWidthString(gameStateToString(_game.state));
+  
+  // await twit.post('statuses/update', {
+  //   status: status,
+  // });
+
+  return status;
+});
+
+async function onMention (tweet) {
+  let commands = parseCommands({
+    status: tweet.status,
+    width: game.width,
+    height: game.height,
+  });
+
+  console.log(commands);
+  let previousState = game.state;
+
+  commands.forEach((command) => {
+    game = game[command.type](command.x, command.y);
+  });
+
+  if (previousState === game.state) {
+    // Nothing changed; no need to tweet... or maybe we could tweet a message to the user
+    //  that nothing changed?
+    console.log('Nothing changed...');
+    return;
+  }
+
+  try {
+    let status = await tweetGameBoard(game);
+    
+    if (game.state.get('lost')) {
+      console.log('You blew it!');
+    } else if (game.state.get('won')) {
+      console.log('Well done!');
+    }
+    
+    console.log();
+
+    console.log(status);
+  } catch (e) {
+    console.error('Failed to tweet game board', e);
+  }
+}
+
+// mentions.on('tweet', onMention);
+
+process.stdin.on('data', (commandText) => {
+  onMention({
+    status: commandText,
+  });
+});
+
+// let status;
+// while (status = process.stdin.read()) {
+//   console.log(status);
+//   onMention({
+//     status: status,
+//   });
+// }

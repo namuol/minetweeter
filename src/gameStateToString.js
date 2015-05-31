@@ -4,8 +4,10 @@ import range from './range';
 
 let chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-function charify (num) {
-  return chars[num];
+function charify (offset=0) {
+  return (num) => {
+    return chars[num+offset];
+  }
 }
 
 export default function gameStateToString (state) {
@@ -28,12 +30,15 @@ export default function gameStateToString (state) {
   let height = board.get('height');
 
   let pokes = state.get('pokes');
+  let flags = state.get('flags');
+
+  let lost = state.get('lost');
 
   let mines = board.get('mines');
 
   let hidden = mines.map((isMine, idx) => {
     if (isMine) {
-      return isMine === 'X' ? 'X' : '@';
+      return '@';
     }
 
     let count = neighbors8(mines, ...xy(idx)).count((v) => { return v === true; });
@@ -51,7 +56,6 @@ export default function gameStateToString (state) {
     }
 
     let [pokeX, pokeY] = xy(idx);
-
     return flood({
       data: hidden,
       mask: mask,
@@ -65,50 +69,63 @@ export default function gameStateToString (state) {
         return value === '.';
       },
     });
-  }, pokes);
+  }, pokes).map((val, idx) => {
+    return val || pokes.get(idx);
+  });
 
   revealMask = revealMask.reduce((result, thisSpotIsRevealed, idx) => {
-    let reveal = false;
+    let reveal;
 
     if (thisSpotIsRevealed) {
       reveal = true;
-    } 
-    
-    reveal = neighbors8Indices(...xy(idx)).some((idx) => {
-      return revealMask.get(idx) && hidden.get(idx) === '.';
-    });
+    } else {
+      reveal = neighbors8Indices(...xy(idx)).some((idx) => {
+        return revealMask.get(idx) && hidden.get(idx) === '.';
+      });
+    }
 
     return result.set(idx, reveal);
   }, revealMask);
 
   let revealed = hidden.map((char, idx) => {
     if (revealMask.get(idx)) {
-      if (pokes.get(idx)) {
-        return 'x';
+      if (mines.get(idx)) {
+        return 'X';
       }
       return char;
     } else {
-      return '#';
+      if (flags.get(idx)) {
+        return '^';
+      } else if (lost && mines.get(idx)) {
+        return '@';
+      } else {
+        return '=';
+      }
     }
   });
 
+  let horizLabel = range(0,width).map(charify(10)).join('');
+
   function labelify (list) {
-    return list.reduce((result, char, idx) => {
+    return horizLabel + '\n' + list.reduce((result, char, idx) => {
       let [x, y] = xy(idx);
       
-      // if (x === 0) {
-      //   result +=  `${y} `;
-      // }
-
       result += char;
 
       if (x === board.get('width') - 1) {
-        result +=  ` ${charify(y)}\n`;
+        result +=  `${charify(10+width)(y)}\n`;
       }
 
       return result;
-    }, '') + '\n' + range(0,width).map(charify).join('')
+    }, '');
   };
 
-  return labelify(revealed) + '\n\n' + labelify(hidden);
+  return labelify(revealed)
+  // + '\n\n' + labelify(hidden.map((ch) => {
+  //   if (ch === '@' || ch === '.') {
+  //     return ch;
+  //   }
+
+  //   return ch;
+  // }));
 };

@@ -11,8 +11,8 @@ export default function createBoard (params) {
     width,
     height,
     mineCount,
-    startX = 0,
-    startY = 0,
+    startX,
+    startY,
   } = params;
 
   let grid = GridHelper({
@@ -28,23 +28,25 @@ export default function createBoard (params) {
     return false;
   }));
 
-  let indicesToClear = grid.neighbors8Indices(startX, startY).push(grid.index(startX, startY));
+  if ((typeof startX === 'number') && (typeof startY === 'number')) {
+    let indicesToClear = grid.neighbors8Indices(startX, startY).push(grid.index(startX, startY));
 
-  let clearedCount = 0;
-  mines = indicesToClear.reduce((result, idx) => {
-    if (result.get(idx) === true) {
-      // Swap with the first random safe spot
-      clearedCount += 1;
-      result = result.set(idx, false);
-    }
-    return result;
-  }, mines);
+    let clearedCount = 0;
+    mines = indicesToClear.reduce((result, idx) => {
+      if (result.get(idx) === true) {
+        // Swap with the first random safe spot
+        clearedCount += 1;
+        result = result.set(idx, false);
+      }
+      return result;
+    }, mines);
 
-  mines = shuffle(range(0,width*height).filter((idx) => {
-    return mines.get(idx) === false && indicesToClear.indexOf(idx) < 0;
-  })).take(clearedCount).reduce((result, idx) => {
-    return result.set(idx, true);
-  }, mines);
+    mines = shuffle(range(0,width*height).filter((idx) => {
+      return mines.get(idx) === false && indicesToClear.indexOf(idx) < 0;
+    })).take(clearedCount).reduce((result, idx) => {
+      return result.set(idx, true);
+    }, mines);
+  }
 
   return Immutable.fromJS({
     width: width,
