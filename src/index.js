@@ -102,7 +102,10 @@ let commandFailedMessage =
 
 You can tweet many actions at once.
 
-Blank action type = click.`;
+Key:
+＝ UNKNOWN
+． BLANK
+＾ FLAG`;
 
 let onMention = throttle(100, async function (tweet) {
   console.log(`Got tweet from ${tweet.user.screen_name}:`, tweet.text);
