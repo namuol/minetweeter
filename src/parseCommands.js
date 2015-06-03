@@ -17,15 +17,15 @@ export default function parseCommands (params) {
 
   let results = [];
 
-  let matcher = /(^(poke|flag|unflag))*(poke|flag|unflag)+\s+([a-z])[\s:,;-]+([a-z])(^(poke|flag|unflag))*/ig;
+  let matcher = /(^(click|flag|unflag))*((click|flag|unflag)\s+)?([a-z])[\s:,;-]+([a-z])(^(click|flag|unflag))*/ig;
 
   let matches;
   while (matches = matcher.exec(status)) {
-    let firstX = xChars.indexOf(matches[4].toUpperCase());
-    let firstY = yChars.indexOf(matches[4].toUpperCase());
+    let firstX = xChars.indexOf(matches[5].toUpperCase());
+    let firstY = yChars.indexOf(matches[5].toUpperCase());
 
-    let secondX = xChars.indexOf(matches[5].toUpperCase());
-    let secondY = yChars.indexOf(matches[5].toUpperCase());
+    let secondX = xChars.indexOf(matches[6].toUpperCase());
+    let secondY = yChars.indexOf(matches[6].toUpperCase());
 
     let x, y;
 
@@ -40,7 +40,7 @@ export default function parseCommands (params) {
     }
 
     results.push({
-      type: matches[3].toLowerCase(),
+      type: (matches[4] || 'click').toLowerCase(),
       x: x,
       y: y,
     });
@@ -52,25 +52,25 @@ export default function parseCommands (params) {
 let tests = [
   [
     {
-      status: `@minetweeter_ poke b N`,
+      status: `@minetweeter_ click b N`,
       width: 9,
       height: 9,
     },
 
     [
-      {type: 'poke', x: 1, y: 4, },
+      {type: 'click', x: 1, y: 4, },
     ],
   ],
 
   [
     {
-      status: `@minetweeter_ poke n B`,
+      status: `@minetweeter_ click n B`,
       width: 9,
       height: 9,
     },
 
     [
-      {type: 'poke', x: 1, y: 4, },
+      {type: 'click', x: 1, y: 4, },
     ],
   ],
 
@@ -108,7 +108,7 @@ let tests = [
 
   [
     {
-      status: `@minetweeter_ flag a j unflag a j poke a j`,
+      status: `@minetweeter_ flag a j unflag a j click a j`,
       width: 9,
       height: 9,
     },
@@ -116,7 +116,21 @@ let tests = [
     [
       {type: 'flag', x: 0, y: 0, },
       {type: 'unflag', x: 0, y: 0, },
-      {type: 'poke', x: 0, y: 0, },
+      {type: 'click', x: 0, y: 0, },
+    ],
+  ],
+
+  [
+    {
+      status: `@minetweeter_ a j unflag a j click a j`,
+      width: 9,
+      height: 9,
+    },
+
+    [
+      {type: 'click', x: 0, y: 0, },
+      {type: 'unflag', x: 0, y: 0, },
+      {type: 'click', x: 0, y: 0, },
     ],
   ],
 ];

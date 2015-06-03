@@ -27,11 +27,11 @@ export default function MinesweeperGame (params) {
 
   let board = emptyBoard;
 
-  let pokes = range(0, width*height).map(() => {
+  let clicks = range(0, width*height).map(() => {
     return false;
   });
   
-  function poke (x, y) {
+  function click (x, y) {
     if (board == emptyBoard) {
       board = createBoard({
         width: width,
@@ -44,7 +44,7 @@ export default function MinesweeperGame (params) {
 
     let idx = index(x, y);
     flags = flags.set(idx, false);
-    pokes = pokes.set(idx, true);
+    clicks = clicks.set(idx, true);
     return getGame();
   }
 
@@ -63,15 +63,20 @@ export default function MinesweeperGame (params) {
   }
 
   function getState() {
+    let isNew = board.get('mines').filter((m) => {
+      return m;
+    }).size === 0;
+
     return Immutable.Map({
       board: board,
-      pokes: pokes,
+      clicks: clicks,
       flags: flags,
-      lost: pokes.some((p, idx) => {
-        return p && board.get('mines').get(idx);
+      new: isNew,
+      lost: clicks.some((p, idx) => {
+        return !isNew && p && board.get('mines').get(idx);
       }),
       won: flags.every((f, idx) => {
-        return f == board.get('mines').get(idx);
+        return !isNew && f == board.get('mines').get(idx);
       }),
     });
   }
@@ -80,7 +85,7 @@ export default function MinesweeperGame (params) {
     return {
       width: width,
       height: height,
-      poke: poke,
+      click: click,
       flag: flag,
       unflag: unflag,
       state: getState(),

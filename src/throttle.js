@@ -23,6 +23,7 @@ export default function throttle (ms, func) {
       try {
         resolve(func(...args));
       } catch (e) {
+        console.error(e);
         reject(e);
       }
 
@@ -32,7 +33,7 @@ export default function throttle (ms, func) {
     awake = false;
   }
 
-  return function (...args) {
+  let throttledFunc = function (...args) {
     return new Promise(function (resolve, reject) {
       q = q.push({
         resolve: resolve,
@@ -43,4 +44,11 @@ export default function throttle (ms, func) {
       awaken();
     });
   };
+
+  throttledFunc.clearQueue = function clearQueue () {
+    q = Immutable.List();
+    awake = false;
+  };
+
+  return throttledFunc;
 };

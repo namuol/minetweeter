@@ -29,7 +29,7 @@ export default function gameStateToString (state) {
   let width = board.get('width');
   let height = board.get('height');
 
-  let pokes = state.get('pokes');
+  let clicks = state.get('clicks');
   let flags = state.get('flags');
 
   let lost = state.get('lost');
@@ -50,16 +50,16 @@ export default function gameStateToString (state) {
     }
   });
 
-  let revealMask = pokes.reduce((mask, poke, idx) => {
-    if (!poke) {
+  let revealMask = clicks.reduce((mask, click, idx) => {
+    if (!click) {
       return mask;
     }
 
-    let [pokeX, pokeY] = xy(idx);
+    let [clickX, clickY] = xy(idx);
     return flood({
       data: hidden,
       mask: mask,
-      x: pokeX, y: pokeY,
+      x: clickX, y: clickY,
       predicate: (params) => {
         let {
           x, y,
@@ -69,8 +69,8 @@ export default function gameStateToString (state) {
         return value === '.';
       },
     });
-  }, pokes).map((val, idx) => {
-    return val || pokes.get(idx);
+  }, clicks).map((val, idx) => {
+    return val || clicks.get(idx);
   });
 
   revealMask = revealMask.reduce((result, thisSpotIsRevealed, idx) => {
