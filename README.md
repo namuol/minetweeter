@@ -38,7 +38,9 @@ flag E K
 
 ## Why would you make this?
 
-Hahaha.
+*Stares off into the distance, smiling manically.*
+
+Huh?
 
 ## Game Logic
 
